@@ -31,6 +31,18 @@ func items_pop_front():
 		item_inventory.pop_front()
 		item_weight.pop_front()
 
+func calc_new_momentum():
+		momentumX = (player_weight+get_items_weight())*velocity[0]
+		momentumY = (player_weight+get_items_weight())*velocity[1]
+
+func set_item_speed(power):
+	item_thrown_speed = power
+
+func calc_item_thrown_vector_components():
+	item_thrown_angleX = sin(onPress_rotation_dir)*(-1)
+	item_thrown_angleY = cos(onPress_rotation_dir)
+	
+
 func get_input():
 	rotation_dir = 0
 	if velocity == null:
@@ -46,11 +58,8 @@ func get_input():
 
 	if Input.is_action_just_pressed('main_action'):
 		onPress_rotation_dir = rotation
-
-		item_thrown_speed = 25 #placeholder, final should have speed scale with time button held
-
-		item_thrown_angleX = sin(onPress_rotation_dir)*(-1)
-		item_thrown_angleY = cos(onPress_rotation_dir)
+		set_item_speed(25) #placeholder, final should have speed scale with time button held
+		calc_item_thrown_vector_components()
 
 		print ("pre: ", velocity[0], " ", velocity[1])
 		print ("item popped: ", item_inventory[0], " ", item_weight[0])
@@ -59,15 +68,9 @@ func get_input():
 		velocity[1] = (momentumY - (item_weight[0]*item_thrown_angleY*scale_factor))/(player_weight+get_items_weight()-item_weight[0])
 
 		items_pop_front()
-
-		momentumX = (player_weight+get_items_weight())*velocity[0]
-		momentumY = (player_weight+get_items_weight())*velocity[1]
-		#problem: new momentum not calculated correctly!
-
+		calc_new_momentum()
 		print ("post: ", velocity[0], " ", velocity[1])
-
 		velocity = Vector2(velocity[0], velocity[1])
-
 		r_velocity = velocity
 	#if Input.is_action_just_released("main_action"):
 		#print (get_items_weight())
