@@ -27,6 +27,10 @@ var item_thrown_angleY = 0;
 
 var item_thrown_speed = 0;
 
+func items_pop_front():
+		item_inventory.pop_front()
+		item_weight.pop_front()
+
 func get_input():
 	rotation_dir = 0
 	if velocity == null:
@@ -35,27 +39,26 @@ func get_input():
 	if Input.is_action_pressed('right'):
 		rotation_dir += 0.5
 		print (rotation)
-		print ("sin: ", sin(rotation), " - cos: ", cos(rotation))
+
 	if Input.is_action_pressed('left'):
 		rotation_dir -= 0.5
 		print (rotation)
-		print ("sin: ", sin(rotation), " - cos: ", cos(rotation))
+
 	if Input.is_action_just_pressed('main_action'):
 		onPress_rotation_dir = rotation
 
-		item_thrown_speed = 25
+		item_thrown_speed = 25 #placeholder, final should have speed scale with time button held
 
-		item_thrown_angleX = sin(rotation)*(-1)
-		item_thrown_angleY = cos(rotation)
+		item_thrown_angleX = sin(onPress_rotation_dir)*(-1)
+		item_thrown_angleY = cos(onPress_rotation_dir)
 
 		print ("pre: ", velocity[0], " ", velocity[1])
 		print ("item popped: ", item_inventory[0], " ", item_weight[0])
 
-		velocity[0] = (momentumX - (item_weight[0]*item_thrown_angleX*scale_factor))/player_weight
-		velocity[1] = (momentumY - (item_weight[0]*item_thrown_angleY*scale_factor))/player_weight
+		velocity[0] = (momentumX - (item_weight[0]*item_thrown_angleX*scale_factor))/(player_weight+get_items_weight()-item_weight[0])
+		velocity[1] = (momentumY - (item_weight[0]*item_thrown_angleY*scale_factor))/(player_weight+get_items_weight()-item_weight[0])
 
-		item_inventory.pop_front()
-		item_weight.pop_front()
+		items_pop_front()
 
 		momentumX = (player_weight+get_items_weight())*velocity[0]
 		momentumY = (player_weight+get_items_weight())*velocity[1]
