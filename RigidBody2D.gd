@@ -21,11 +21,12 @@ var onPress_rotation_dir = 0
 var momentumX = (player_weight+get_items_weight())*velocity[0] #at start of action, player and items share velocity
 var momentumY = (player_weight+get_items_weight())*velocity[1] #use these to calc new speed
 
-var item_thrown_angleX = 0;
-var item_thrown_angleY = 0;
-var item_thrown_speed = 0;
+var item_thrown_angleX = 0
+var item_thrown_angleY = 0
+var item_thrown_speed = 0
 
 var latched_onto_object = false
+var latched_offset = Vector2()
 
 func items_pop_front():
 	item_inventory.pop_front()
@@ -42,16 +43,37 @@ func calc_item_thrown_vector_components():
 	item_thrown_angleX = sin(onPress_rotation_dir)*(-1)
 	item_thrown_angleY = cos(onPress_rotation_dir)
 
+
+var offset_flag = false
+
 func get_input():
 	rotation_dir = 0
 
 	if latched_onto_object:
+		$Sprite.modulate = Color(0, 0, 1)
+		if !offset_flag:
+			latched_offset[0] = (temp2.position[0] - position[0])*(-1)
+			latched_offset[1] = (temp2.position[1] - position[1]) * (-1)
+			position = temp2.position
+			offset_flag = true
+		$Sprite.set_offset(latched_offset)
+		$CollisionShape2D.set_disabled(true)
 		if Input.is_action_just_pressed('main_action'):
 			item_thrown_angleX = sin(onPress_rotation_dir)*(-1)
 			item_thrown_angleY = cos(onPress_rotation_dir)
 			velocity[0] = scale_factor * item_thrown_angleX * 0.1
 			velocity[1] = scale_factor * item_thrown_angleY * 0.1
-			temp = null
+			latched_onto_object = false
+			$Sprite.modulate = Color(1, 1, 1)
+			$Sprite.set_offset(Vector2(0,0))
+			$CollisionShape2D.set_disabled(false)
+			offset_flag = false
+		# find position of collision, subtract player position with parent, set as offset
+		if Input.is_action_pressed('right'):
+			rotation_dir += 0.5
+		if Input.is_action_pressed('left'):
+			rotation_dir -= 0.5
+		temp = null
 	else:
 		if Input.is_action_pressed('right'):
 			rotation_dir += 0.5
@@ -74,7 +96,11 @@ var temp2
 
 func _physics_process(delta):
 	get_input()
-	rotation += rotation_dir * rotation_speed * delta * 2
+	if latched_onto_object:
+		temp2.rotation += rotation_dir * rotation_speed * delta * 2
+		rotation += rotation_dir * rotation_speed * delta * 2
+	else:
+		rotation += rotation_dir * rotation_speed * delta * 2
 	temp = move_and_collide(velocity)
 
 	if temp != null:
@@ -82,6 +108,5 @@ func _physics_process(delta):
 		velocity = Vector2(0,0)
 		momentumX = 0
 		momentumY = 0
+		#print ("player position: ", position, " celestial object position: ", temp2.position)
 		latched_onto_object = true
-	else:
-		latched_onto_object = false
